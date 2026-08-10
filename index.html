@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieBox Complete UI with Premium VIP</title>
+
+    <!-- Firebase SDK (Compat Version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
+    <style>
+        /* ==========================================================================
+           GLOBAL RESETS & CORE TYPOGRAPHY
+           ========================================================================== */
+        * { 
+            box-sizing: border-box; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body { 
+            background: #0b0c10; 
+            color: #ffffff; 
+            margin: 0; 
+            padding: 0;
+            padding-bottom: 75px; 
+            overflow-x: hidden;
+        }
+
+        /* ==========================================================================
+           TOP NAVIGATION BAR & CATEGORIES
+           ========================================================================== */
+        .top-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 15px; 
+            background: #12141d; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            border-bottom: 1px solid #1f2330; 
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo-container { 
+            display: flex; 
+            flex-direction: column; 
+        }
+        
+        .logo { 
+            font-size: 19px; 
+            font-weight: bold; 
+            color: #00e676; 
+            line-height: 1.1; 
+            letter-spacing: -0.5px;
+        }
+        
+        .brand-subtext { 
+            font-size: 9px; 
+            color: #a0aec0; 
+            letter-spacing: 0.5px; 
+            margin-top: 2px; 
+        } 
+        
+        .brand-subtext span { 
+            color: #00e676; 
+            font-weight: 600; 
+        }
+        
+        .search-input { 
+            background: #1a1d28; 
+            border: 1px solid #2a2e3d; 
+            padding: 8px 14px; 
+            border-radius: 20px; 
+            color: #fff; 
+            width: 58%; 
+            outline: none; 
+            font-size: 13px; 
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: #00e676;
+        }
+
+        /* Horizontal Scrollable Categories Bar */
+        .categories-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 15px;
+            background: #0b0c10;
+            white-space: nowrap;
+            scrollbar-width: none; /* Firefox */
+        }
+
+        .categories-bar::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        .category-chip {
+            background: #12141d;
+            color: #a0aec0;
+            border: 1px solid #1f2330;
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .category-chip.active {
+            background: #00e676;
+            color: #000;
+            border-color: #00e676;
+            font-weight: bold;
+        }
+
+        /* ==========================================================================
+           PAGE CONTAINERS & ROUTING
+           ========================================================================== */
+        .container { 
+            padding: 15px; 
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        .page { 
+            display: none; 
+        }
+        
+        .page.active { 
+            display: block; 
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==========================================================================
+           VIDEO PLAYER & MEDIA CARDS
+           ========================================================================== */
+        #player-wrapper { 
+            display: none; 
+            background: #000; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            margin-bottom: 15px; 
+            border: 1px solid #00e676; 
+            box-shadow: 0 0 15px rgba(0,230,118,0.2); 
+        }
+        
+        iframe { 
+            width: 100%; 
+            height: 210px; 
+            border: none; 
+        }
+        
+        .grid-3 { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 10px; 
+        }
+        
+        .card { 
+            background: #12141d; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            cursor: pointer; 
+            border: 1px solid #1f2330; 
+            transition: transform 0.15s ease;
+        }
+        
+        .card:active { 
+            transform: scale(0.96); 
+        }
+        
+        .card img { 
+            width: 100%; 
+            height: 145px; 
+            object-fit: cover; 
+            display: block; 
+            background: #1a1d28; 
+        }
+        
+        .card-info { 
+            padding: 6px; 
+            font-size: 11px; 
+            font-weight: 500; 
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
+            color: #ccc; 
+        }
+
+        /* ==========================================================================
+           PROFILE & USER INTERFACE ELEMENTS
+           ========================================================================== */
+        .profile-header { 
+            background: #12141d; 
+            padding: 15px; 
+            border-radius: 14px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 12px; 
+            border: 1px solid #1f2330; 
+        }
+        
+        .menu-group { 
+            background: #12141d; 
+            border-radius: 14px; 
+            overflow: hidden; 
+            border: 1px solid #1f2330; 
+            margin-bottom: 12px; 
+        }
+        
+        .menu-item { 
+            padding: 14px 15px; 
+            border-bottom: 1px solid #1a1d28; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer; 
+            font-size: 14px; 
+            transition: background 0.2s ease;
+        }
+        
+        .menu-item:last-child { 
+            border-bottom: none; 
+        }
+
+        .menu-item:active {
+            background: #1a1d28;
+        }
+        
+        .menu-left { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        .badge-green { 
+            color: #00e676; 
+            font-size: 12px; 
+        }
+        
+        .badge-gold { 
+            color: #ffd700; 
+            font-size: 11px; 
+            border: 1px solid #ffd700; 
+            padding: 2px 6px; 
+            border-radius: 10px; 
+        }
+
+        /* Developer Branding Card */
+        .dev-badge-card {
+            background: linear-gradient(135deg, rgba(0,230,118,0.08) 0%, rgba(18,20,29,1) 100%);
+            border: 1px solid rgba(0,230,118,0.3);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 0 10px rgba(0,230,118,0.1);
+        }
+
+        .dev-tag {
+            background: rgba(0,230,118,0.15);
+            color: #00e676;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Gold Card Plate (Rewards System) */
+        .gold-plate-card {
+            background: linear-gradient(135deg, #231b0a 0%, #12141d 100%);
+            border: 1px solid #ffd700;
+            border-radius: 14px;
+            padding: 14px 15px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);
+            animation: goldGlow 2.5s infinite alternate;
+        }
+
+        @keyframes goldGlow {
+            0% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.15); }
+            100% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.45); }
+        }
+
+        .gold-plate {
+            background: linear-gradient(135deg, #2b1f0d 0%, #171511 100%);
+            border: 1px solid #ffd700;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 15px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* ==========================================================================
+           BUTTON STYLES
+           ========================================================================== */
+        .btn-gold { 
+            background: linear-gradient(90deg, #ffb300, #ffd700); 
+            color: #000; 
+            font-weight: bold; 
+            border: none; 
+            padding: 8px 18px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+        }
+        
+        .btn-neon { 
+            background: #00e676; 
+            color: #000; 
+            font-weight: bold; 
+            border: none; 
+            padding: 8px 18px; 
+            border-radius: 20px; 
+            cursor: pointer; 
+        }
+        
+        .btn-dark { 
+            background: #222634; 
+            color: #ccc; 
+            border: 1px solid #32384a; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            cursor: pointer; 
+        }
+
+        /* ==========================================================================
+           VIP MODAL & PRICING
+           ========================================================================== */
+        .price-option { 
+            background: #12141d; 
+            border: 1px solid #2a2e3d; 
+            border-radius: 12px; 
+            padding: 8px 12px; 
+            margin-bottom: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+        }
+        
+        .price-option.active { 
+            border-color: #ffd700; 
+            background: #231b0a; 
+        }
+
+        /* ==========================================================================
+           DOWNLOADS PAGE STYLES
+           ========================================================================== */
+        .dl-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
+        }
+        
+        .dl-transfer { 
+            background: #1a2228; 
+            border: 1px solid #00e676; 
+            color: #00e676; 
+            padding: 5px 12px; 
+            border-radius: 15px; 
+            font-size: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+        }
+        
+        .storage-box { 
+            background: #12141d; 
+            padding: 12px 15px; 
+            border-radius: 10px; 
+            border: 1px solid #1f2330; 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 13px; 
+            color: #aaa; 
+            margin-bottom: 15px; 
+        }
+        
+        .dl-tabs { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 25px; 
+        }
+        
+        .dl-tab { 
+            background: #12141d; 
+            padding: 8px 16px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            color: #888; 
+            border: 1px solid #1f2330; 
+            cursor: pointer;
+        }
+        
+        .dl-tab.active { 
+            background: #fff; 
+            color: #000; 
+            font-weight: bold; 
+            border: none; 
+        }
+        
+        .empty-box-container { 
+            text-align: center; 
+            margin: 30px 0 40px; 
+        }
+        
+        .box-icon { 
+            width: 60px; 
+            height: 60px; 
+            background: #c29b62; 
+            margin: 0 auto 12px; 
+            border-radius: 8px; 
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); 
+            opacity: 0.8; 
+        }
+
+        /* ==========================================================================
+           MODAL OVERLAYS & POPUPS
+           ========================================================================== */
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: rgba(0,0,0,0.85); 
+            z-index: 1000; 
+            justify-content: center; 
+            align-items: center; 
+            backdrop-filter: blur(4px); 
+        }
+        
+        .modal-card { 
+            background: linear-gradient(145deg, #181c27, #10121a); 
+            border: 1px solid #ffd700; 
+            border-radius: 24px; 
+            padding: 20px; 
+            width: 88%; 
+            max-width: 360px; 
+            text-align: center; 
+            transform: scale(0.8); 
+            opacity: 0; 
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        }
+        
+        .modal-overlay.active { 
+            display: flex; 
+        }
+        
+        .modal-overlay.active .modal-card { 
+            transform: scale(1); 
+            opacity: 1; 
+        }
+
+        /* ==========================================================================
+           BOTTOM NAVIGATION BAR
+           ========================================================================== */
+        .bottom-bar { 
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            height: 60px; 
+            background: #12141d; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            border-top: 1px solid #1f2330; 
+            z-index: 99; 
+        }
+        
+        .tab-item { 
+            color: #6c7280; 
+            font-size: 10px; 
+            text-align: center; 
+            cursor: pointer; 
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .tab-item.active { 
+            color: #00e676; 
+        }
+        
+        .tab-item div { 
+            font-size: 18px; 
+            margin-bottom: 2px; 
+        }
+
+        #toast { 
+            display: none; 
+            position: fixed; 
+            bottom: 75px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: #ffd700; 
+            color: #000; 
+            padding: 8px 18px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            font-size: 12px; 
+            z-index: 2000; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Adsterra Container & QR Code Layout */
+        .adsterra-slot { 
+            text-align: center; 
+            margin: 10px 0; 
+            min-height: 50px; 
+            display: block; 
+        }
+        
+        .qr-img { 
+            width: 170px; 
+            height: 170px; 
+            margin: 10px auto; 
+            display: block; 
+            border-radius: 10px; 
+            border: 2px solid #ffd700; 
+            background: #fff;
+        }
+        
+        .tg-btn { 
+            background: #229ed9; 
+            color: #fff; 
+            border: none; 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            margin-top: 8px; 
+            cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION -->
+    <div class="top-nav">
+        <div class="logo-container">
+            <div class="logo">MovieBox</div>
+            <div class="brand-subtext">By <span>Abdulla</span></div>
+        </div>
+        <input type="text" class="search-input" id="search-bar" placeholder="Search movies, series..." onkeyup="handleSearch(event)">
+    </div>
+
+    <!-- HOME PAGE -->
+    <div id="home-page" class="container page active">
+        
+        <!-- CATEGORIES BAR -->
+        <div class="categories-bar">
+            <div class="category-chip active" onclick="switchCategory('trending', this)">🔥 Trending</div>
+            <div class="category-chip" onclick="switchCategory('top_rated', this)">⭐ Top Rated</div>
+            <div class="category-chip" onclick="switchCategory('series', this)">📺 Web Series</div>
+            <div class="category-chip" onclick="switchCategory('action', this)">💥 Action</div>
+            <div class="category-chip" onclick="switchCategory('horror', this)">👻 Horror</div>
+            <div class="category-chip" onclick="switchCategory('romance', this)">💖 Romance</div>
+            <div class="category-chip" onclick="switchCategory('comedy', this)">😂 Comedy</div>
+            <div class="category-chip" onclick="switchCategory('scifi', this)">🚀 Sci-Fi</div>
+        </div>
+
+        <div id="player-wrapper">
+            <iframe id="main-player" src="" allowfullscreen></iframe>
+            <div style="padding: 10px; background: #12141d;"><h4 id="stream-title" style="margin: 0; color: #00e676;">Playing Video</h4></div>
+        </div>
+
+        <!-- Adsterra Banner Slot -->
+        <div id="adsterra-banner" class="adsterra-slot">
+            <!-- Adsterra Banner Code Place Here -->
+        </div>
+
+        <h3 id="section-heading" style="font-size: 15px; margin: 10px 0 12px; color: #00e676;">Trending Now</h3>
+        <div class="grid-3" id="home-grid"></div>
+    </div>
+
+    <!-- DOWNLOADS PAGE -->
+    <div id="downloads-page" class="container page">
+        <div class="dl-header">
+            <h2 style="margin: 0; font-size: 22px;">Downloads</h2>
+            <div class="dl-transfer">📲 Transfer</div>
+        </div>
+
+        <div class="storage-box">
+            <span>Downloaded</span>
+            <b style="color: #fff;">15.1GB available</b>
+        </div>
+
+        <div class="dl-tabs">
+            <div class="dl-tab active">MovieBox</div>
+            <div class="dl-tab">Local files</div>
+            <div class="dl-tab">Received</div>
+        </div>
+
+        <div class="empty-box-container">
+            <div class="box-icon"></div>
+            <div style="color: #888; font-size: 13px; margin-bottom: 15px;">Your downloads will show up here</div>
+            <button class="btn-dark">Find more free sources</button>
+        </div>
+
+        <h3 style="font-size: 16px; margin: 0 0 12px;">For You</h3>
+        <div class="grid-3" id="downloads-grid"></div>
+    </div>
+
+    <!-- ME PAGE -->
+    <div id="me-page" class="container page">
+        <div class="profile-header">
+            <div>
+                <div style="font-size: 15px; font-weight: bold;" id="user-status-text">Guest User</div>
+                <div style="font-size: 11px; color: #666; margin-top: 2px;">ID: <span id="user-id-text">MB-INIT</span></div>
+            </div>
+            <button class="btn-neon" id="auth-btn" onclick="openModal('login-modal')">Log in</button>
+        </div>
+
+        <!-- Developer Branding Card -->
+        <div class="dev-badge-card">
+            <div style="font-size: 12px; color: #e2e8f0;">⚡ Crafted with passion by <b style="color:#00e676;">Abdulla</b></div>
+            <span class="dev-tag">Developer</span>
+        </div>
+
+        <!-- Gold Glowing Card Plate -->
+        <div class="gold-plate-card" onclick="openPage('rewards-page')">
+            <div>
+                <div style="color: #ffd700; font-weight: bold; font-size: 14px;">⭐ Rewards Center</div>
+                <div style="color: #888; font-size: 11px; margin-top: 2px;">Win big Prizes!</div>
+            </div>
+            <div style="color: #ffd700;">›</div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-item" onclick="openVipModal()">
+                <div class="menu-left"><span>👑</span><span style="color: #ffd700; font-weight: bold;">Upgrade to VIP (No Ads)</span></div>
+                <span class="badge-gold" id="vip-badge-status">Get Premium</span>
+            </div>
+            <div class="menu-item">
+                <div class="menu-left"><span>🔖</span><span>My List</span></div>
+                <span style="color:#888;" id="my-list-count">0 ›</span>
+            </div>
+            <div class="menu-item">
+                <div class="menu-left"><span>👍</span><span>My Likes</span></div>
+                <span style="color:#888;" id="my-likes-count">0 ›</span>
+            </div>
+            <div class="menu-item">
+                <div class="menu-left"><span>🕒</span><span>Watch History</span></div>
+                <span style="color:#888;">›</span>
+            </div>
+            <div class="menu-item">
+                <div class="menu-left"><span>🔔</span><span>Messages</span></div>
+                <span style="color:#888;">›</span>
+            </div>
+            <div class="menu-item">
+                <div class="menu-left"><span>💬</span><span>Community</span></div>
+                <span style="color:#888;">0 ›</span>
+            </div>
+            <div class="menu-item">
+                <div class="menu-left"><span>💬</span><span>My Comments</span></div>
+                <span style="color:#888;">0 ›</span>
+            </div>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-item">
+                <div class="menu-left"><span>⚙️</span><span>Settings</span></div>
+                <span class="badge-green">New Version ›</span>
+            </div>
+            <div class="menu-item">
+                <div class="menu-left"><span>💬</span><span>Feedback</span></div>
+                <span style="color:#888;">›</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- REWARDS CENTER PAGE -->
+    <div id="rewards-page" class="container page">
+        <button style="background:none; border:none; color:#00e676; font-size:15px; margin-bottom:15px; cursor:pointer;" onclick="openPage('me-page')">‹ Back</button>
+        <h2 style="margin: 0 0 20px; color: #ffd700;">Rewards Center</h2>
+        
+        <div class="gold-plate">
+            <div>
+                <div style="font-weight: bold; font-size: 14px;">98 POINT / 7-day VIP</div>
+                <div style="color: #ffd700; font-size: 12px; margin-top: 4px;">🪙 -98</div>
+            </div>
+            <button class="btn-gold" onclick="openRewardPopup('7-Day VIP', 'Spend 98 Points to redeem 7 Days VIP No-Ads Access?')">Redeem</button>
+        </div>
+
+        <div class="gold-plate">
+            <div>
+                <div style="font-weight: bold; font-size: 14px;">Watch Short Video AD</div>
+                <div style="color: #00e676; font-size: 12px; margin-top: 4px;">🪙 +1 points</div>
+            </div>
+            <button class="btn-neon" onclick="openRewardPopup('Watch Ad', 'Watch a 15-second sponsored video ad to earn 1 point.')">Watch</button>
+        </div>
+    </div>
+
+    <!-- PREMIUM NO-ADS VIP MODAL WITH CUSTOM PAYMENT QR -->
+    <div id="vip-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="font-size: 36px; margin-bottom: 4px;">👑</div>
+            <h3 style="margin: 0 0 4px; color: #ffd700;">MovieBox VIP Premium</h3>
+            <p style="font-size: 11px; color: #aaa; margin-bottom: 12px;">Remove all ads & enjoy 1080p Ultra HD streaming</p>
+
+            <div class="price-option" onclick="selectPlan(this, '₹29')">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 12px;">7-Day VIP Pass</div>
+                    <div style="font-size: 10px; color: #888;">Short Term Pass</div>
+                </div>
+                <div style="color: #ffd700; font-weight: bold;">₹29</div>
+            </div>
+
+            <div class="price-option active" onclick="selectPlan(this, '₹99')">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 12px;">1 Month VIP Pass</div>
+                    <div style="font-size: 10px; color: #888;">No Ads + Unlimited Downloads</div>
+                </div>
+                <div style="color: #ffd700; font-weight: bold;">₹99</div>
+            </div>
+
+            <div class="price-option" onclick="selectPlan(this, '₹499')">
+                <div style="text-align: left;">
+                    <div style="font-weight: bold; font-size: 12px;">1 Year VIP Pass</div>
+                    <div style="font-size: 10px; color: #888;">Save 60% off</div>
+                </div>
+                <div style="color: #ffd700; font-weight: bold;">₹499</div>
+            </div>
+
+            <img id="vip-qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=ansaribhai@jio%26pn=Ansari%20Abdula%20Allauddin%26am=99" class="qr-img" alt="Ansari Abdula Allauddin UPI QR">
+            <div style="font-size: 11px; color: #00e676; margin-bottom: 2px; font-weight: bold;">Ansari Abdula Allauddin</div>
+            <div style="font-size: 11px; color: #ffd700; margin-bottom: 8px; font-family: monospace;">ansaribhai@jio</div>
+
+            <button class="tg-btn" onclick="sendTelegramProof()">Send Screenshot on Telegram</button>
+            <div style="margin-top: 10px; font-size: 11px; color: #666; cursor: pointer;" onclick="closeModal('vip-modal')">Maybe Later</div>
+        </div>
+    </div>
+
+    <!-- REWARD MODAL POPUP -->
+    <div id="reward-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div style="font-size: 38px; margin-bottom: 8px;">🪙</div>
+            <h3 id="pop-title" style="margin: 0 0 8px; color: #ffd700;">Reward Popup</h3>
+            <p id="pop-desc" style="font-size: 12px; color: #aaa; margin-bottom: 18px;">Details...</p>
+            <button class="btn-gold" style="width: 100%;" onclick="claimReward()">Confirm Claim</button>
+            <div style="margin-top: 12px; font-size: 12px; color: #666; cursor: pointer;" onclick="closeModal('reward-modal')">Close</div>
+        </div>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-card" style="border-color: #00e676;">
+            <h2 style="margin: 0 0 18px; color: #fff; font-size: 20px;">Welcome to <span style="color:#00e676;">MovieBox</span></h2>
+            
+            <button class="btn-gold" style="width: 100%; margin-bottom: 10px; padding: 11px;" onclick="googleLogin()">🌐 Continue with Google</button>
+            <button class="btn-neon" style="width: 100%; margin-bottom: 10px; padding: 11px;" onclick="showToast('Email sign up coming soon')">✉️ Sign up with email</button>
+            <button class="btn-dark" style="width: 100%; padding: 11px;" onclick="guestLogin()">⚡ Guest Quick Access</button>
+        </div>
+    </div>
+
+    <!-- AD INTERSTITIAL MODAL -->
+    <div id="ad-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="margin-top:0; color: #00e676;">Sponsored Video Ad</h3>
+            <p style="font-size: 12px; color: #aaa;">Your movie stream will load after the ad...</p>
+            <button class="btn-neon" style="width: 100%; margin-top: 12px;" onclick="closeAdAndStream()">Skip Ad & Play Video</button>
+            <div style="margin-top: 12px; font-size: 11px; color: #ffd700; cursor: pointer; text-decoration: underline;" onclick="closeModal('ad-modal'); openVipModal();">🚫 Remove Ads Permanently with VIP</div>
+        </div>
+    </div>
+
+    <!-- BOTTOM TAB NAVIGATION -->
+    <div class="bottom-bar">
+        <div class="tab-item active" onclick="switchTab('home-page', this)">
+            <div>🏠</div> Home
+        </div>
+        <div class="tab-item" onclick="switchTab('downloads-page', this)">
+            <div>📥</div> Downloads
+        </div>
+        <div class="tab-item" onclick="switchTab('me-page', this)">
+            <div>👤</div> Me
+        </div>
+    </div>
+
+    <div id="toast">Message</div>
+
+    <!-- JAVASCRIPT LOGIC & APPLICATION INITIALIZATION -->
+    <script>
+        // 1. Firebase Initialization
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "movie-box-15207.firebaseapp.com",
+            databaseURL: "https://movie-box-15207-default-rtdb.firebaseio.com",
+            projectId: "movie-box-15207",
+            storageBucket: "movie-box-15207.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // 2. Immediate ID Setup (Bypasses Delay)
+        let currentUserId = localStorage.getItem('moviebox_user_id');
+        if (!currentUserId) {
+            currentUserId = 'MB-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+            localStorage.setItem('moviebox_user_id', currentUserId);
+        }
+
+        function updateUserIdUI() {
+            const idDisplay = document.getElementById('user-id-text');
+            if (idDisplay) {
+                idDisplay.innerText = currentUserId;
+            }
+        }
+
+        let isVIP = false;
+        let selectedStreamUrl = "";
+        let selectedPlanAmount = "₹99";
+
+        // 3. Firebase Realtime VIP Sync
+        function syncUserVIPStatus() {
+            if (!currentUserId || typeof firebase === 'undefined') return;
+            try {
+                const database = firebase.database();
+                database.ref('Users/' + currentUserId + '/isVIP').on('value', (snapshot) => {
+                    isVIP = snapshot.val() === true;
+                    const badge = document.getElementById('vip-badge-status');
+                    const adBanner = document.getElementById('adsterra-banner');
+
+                    if (isVIP) {
+                        if (badge) {
+                            badge.innerText = "VIP ACTIVE";
+                            badge.style.background = "#ffd700";
+                            badge.style.color = "#000";
+                            badge.style.border = "none";
+                        }
+                        if (adBanner) adBanner.style.display = "none";
+                    } else {
+                        if (badge) {
+                            badge.innerText = "Get Premium";
+                            badge.style.background = "transparent";
+                            badge.style.color = "#ffd700";
+                            badge.style.border = "1px solid #ffd700";
+                        }
+                        if (adBanner) adBanner.style.display = "block";
+                    }
+                });
+            } catch(e) {}
+        }
+
+        // 4. TMDB Grid Data Loader with Category Filters (Key Updated)
+        const TMDB_API_KEY = "e11526be9d7539f44250954ddb5a2ce0";
+
+        async function loadGrid(containerId, category = 'trending') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = "<div style='color:#aaa; font-size:12px; grid-column: span 3;'>Loading content...</div>";
+
+            let fetchUrl = "";
+
+            switch (category) {
+                case 'trending':
+                    fetchUrl = `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_API_KEY}`;
+                    break;
+                case 'top_rated':
+                    fetchUrl = `https://api.themoviedb.org/3/movie/top_rated?api_key=${TMDB_API_KEY}`;
+                    break;
+                case 'series':
+                    fetchUrl = `https://api.themoviedb.org/3/trending/tv/week?api_key=${TMDB_API_KEY}`;
+                    break;
+                case 'action':
+                    fetchUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=28`;
+                    break;
+                case 'horror':
+                    fetchUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=27`;
+                    break;
+                case 'romance':
+                    fetchUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=10749`;
+                    break;
+                case 'comedy':
+                    fetchUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=35`;
+                    break;
+                case 'scifi':
+                    fetchUrl = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&with_genres=878`;
+                    break;
+                default:
+                    fetchUrl = `https://api.themoviedb.org/3/trending/movie/week?api_key=${TMDB_API_KEY}`;
+            }
+
+            try {
+                const response = await fetch(fetchUrl);
+                const data = await response.json();
+                container.innerHTML = "";
+
+                if (data.results && data.results.length > 0) {
+                    data.results.slice(0, 18).forEach(item => {
+                        const card = document.createElement('div');
+                        card.className = 'card';
+                        
+                        const title = item.title || item.name;
+                        const isTV = category === 'series' || item.first_air_date;
+                        const streamUrl = isTV 
+                            ? `https://vidsrc.me/embed/tv?tmdb=${item.id}&season=1&episode=1` 
+                            : `https://vidsrc.me/embed/movie?tmdb=${item.id}`;
+
+                        card.onclick = () => playStream(streamUrl, title);
+
+                        const imgPath = item.poster_path 
+                            ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
+                            : 'https://via.placeholder.com/150x220?text=No+Cover';
+
+                        card.innerHTML = `
+                            <img src="${imgPath}" alt="${title}">
+                            <div class="card-info">${title}</div>
+                        `;
+                        container.appendChild(card);
+                    });
+                } else {
+                    container.innerHTML = "<div style='color:#aaa; font-size:12px; grid-column: span 3;'>No content available.</div>";
+                }
+            } catch (err) {
+                container.innerHTML = "<div style='color:#f44336; font-size:12px; grid-column: span 3;'>Failed to load. Check connection.</div>";
+            }
+        }
+
+        // Category Switcher Function
+        function switchCategory(catKey, chipElement) {
+            document.querySelectorAll('.category-chip').forEach(chip => chip.classList.remove('active'));
+            chipElement.classList.add('active');
+
+            const heading = document.getElementById('section-heading');
+            if (heading) {
+                heading.innerText = chipElement.innerText;
+            }
+
+            loadGrid('home-grid', catKey);
+        }
+
+        // 5. Navigation & Modal Controls
+        function switchTab(pageId, element) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            element.classList.add('active');
+        }
+
+        function openPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+        function openVipModal() { openModal('vip-modal'); }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.innerText = text;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 2500);
+        }
+
+        function selectPlan(element, price) {
+            document.querySelectorAll('.price-option').forEach(opt => opt.classList.remove('active'));
+            element.classList.add('active');
+            
+            selectedPlanAmount = price;
+            const rawPrice = price.replace('₹', '');
+            const qrImage = document.getElementById('vip-qr-code');
+            if (qrImage) {
+                qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi://pay?pa=ansaribhai@jio%26pn=Ansari%20Abdula%20Allauddin%26am=${rawPrice}`;
+            }
+        }
+
+        // Auto-typed Pre-filled Telegram Message Link
+        function sendTelegramProof() {
+            const msg = `Hello! I have completed the payment of ${selectedPlanAmount} for MovieBox VIP Pass.\nUser ID: ${currentUserId}\n\nPlease verify my payment screenshot.`;
+            const tgUrl = `https://t.me/Movieboxbyabdulla?text=${encodeURIComponent(msg)}`;
+            window.open(tgUrl, '_blank');
+        }
+
+        function playStream(url, title) {
+            selectedStreamUrl = url;
+            if (!isVIP) {
+                openModal('ad-modal');
+            } else {
+                startPlayback(title);
+            }
+        }
+
+        function closeAdAndStream() {
+            closeModal('ad-modal');
+            startPlayback("Playing Stream");
+        }
+
+        function startPlayback(title) {
+            const playerWrapper = document.getElementById('player-wrapper');
+            const mainPlayer = document.getElementById('main-player');
+            document.getElementById('stream-title').innerText = title;
+            mainPlayer.src = selectedStreamUrl;
+            playerWrapper.style.display = "block";
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function handleSearch(e) {
+            if (e.key === 'Enter') {
+                const query = e.target.value.trim();
+                if (!query) return;
+                showToast('Searching movies...');
+                
+                try {
+                    const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    const container = document.getElementById('home-grid');
+                    container.innerHTML = "";
+                    
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(movie => {
+                            const card = document.createElement('div');
+                            card.className = 'card';
+                            const streamUrl = `https://vidsrc.me/embed/movie?tmdb=${movie.id}`;
+                            card.onclick = () => playStream(streamUrl, movie.title);
+
+                            const imgPath = movie.poster_path 
+                                ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+                                : 'https://via.placeholder.com/150x220?text=No+Cover';
+
+                            card.innerHTML = `
+                                <img src="${imgPath}" alt="${movie.title}">
+                                <div class="card-info">${movie.title}</div>
+                            `;
+                            container.appendChild(card);
+                        });
+                    } else {
+                        container.innerHTML = "<div style='color:#aaa; font-size:12px; grid-column: span 3;'>No results found.</div>";
+                    }
+                } catch(err) {
+                    showToast('Search failed');
+                }
+            }
+        }
+
+        function openRewardPopup(title, desc) {
+            document.getElementById('pop-title').innerText = title;
+            document.getElementById('pop-desc').innerText = desc;
+            openModal('reward-modal');
+        }
+
+        function claimReward() {
+            closeModal('reward-modal');
+            showToast('Reward claimed successfully!');
+        }
+
+        function googleLogin() {
+            showToast('Google Sign-In coming soon');
+            closeModal('login-modal');
+        }
+
+        function guestLogin() {
+            closeModal('login-modal');
+            document.getElementById('user-status-text').innerText = 'Guest User';
+            showToast('Logged in as Guest: ' + currentUserId);
+        }
+
+        // Direct Execution
+        updateUserIdUI();
+        syncUserVIPStatus();
+        loadGrid('home-grid', 'trending');
+        loadGrid('downloads-grid', 'top_rated');
+    </script>
+</body>
+</html>
